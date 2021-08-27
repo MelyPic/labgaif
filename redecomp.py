@@ -85,26 +85,53 @@ class DecompTree(AGraph):
         elif vd[self.typ[curr_root.name]]:
             'case 1b'
             to_sibling = list()
+            nmsibling = ''
             for n in vd[1 - self.typ[curr_root.name]]:
                 '''
                 create sibling clan with the rest;
                 this must become more sophisticate if we move beyond edges/nonedges
                 '''
                 to_sibling.append(n)
+                nmsibling += "_" + n
                 curr_root.remove_node(n)
                 # make clan with to_sibling nodes plus recursive call on curr_node
                 # connect it with remaining curr_root
                 # clarify whether/how curr_root gets updated
-                print("Node", node_to_add.nmr, "not added, case 1b not completed yet")
+                #print("Node", node_to_add.nmr, "not added, case 1b not completed yet")
+            
+            sibling_clan = self.subgraph(to_sibling, name = nmsibling)
+            self.typ[nmsibling] = self.typ[curr_root.name]
+                     
+            self.add_node("PT_"+nmsibling)#conectarlo al sibling_clan   
+            nmmedium = nmsibling+ "_"+node_to_add.nmr    
+            medium_clan = self.subgraph([node_to_add.nmr,"PT_"+nmsibling], name = nmmedium)  
+            medium_clan.graph_attr["rank"] = "same"
+           
+            if self.typ[curr_root.name] == 0:
+				medium_clan.add_edge("PT_"+nmsibling , node_to_add.nmr)
+				self.typ[nmmedium] = 1
+			else:
+				self.typ[nmmedium] = 0
+            curr_root.add_node("PT_"+nmmedium)
+            if self.typ[curr_root.name] == 1:
+				for n in curr_root.nodes():
+					if n != "PT_"+nmmedium:
+						curr_root.add_edge("PT_"+nmmedium,n)
+				
         elif not vd[self.typ[curr_root.name]]:
             'case 1c'
             # aux_clan = curr_root
+            self.add_node("PT_"+curr_root.name)#conectar PT de cuirrent_root a current_root
             nmnew = curr_root.name + '_' + node_to_add.nmr
-            new_clan = self.subgraph([node_to_add], name = nmnew)
-            for n in curr_root:
-                new_clan.add_node(n)
+            new_clan = self.subgraph(["PT_"+curr_root.name,node_to_add.nmr], name = nmnew)
+            
+            if self.typ[curr_root.name] == 0:
+				new_clan.add_edge("PT_"+curr_root.name,node_to_add.nmr)
+				self.typ[nmnew] = 1  
+			else:
+				self.typ[nmnew] = 0         
             curr_root = new_clan
-            print("Node", node_to_add.nmr, "not added, case 1c not completed yet")
+          
         else:
             print("Node", node_to_add.nmr, "not added, case not covered so far")
     
