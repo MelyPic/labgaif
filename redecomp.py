@@ -85,7 +85,7 @@ class DecompTree(AGraph):
         elif vd[self.typ[curr_root.name]]:
             'case 1b'
             to_sibling = list()
-            nmsibling = ''
+            nmsibling = 'cluster'
             for n in vd[1 - self.typ[curr_root.name]]:
                 '''
                 create sibling clan with the rest;
@@ -93,31 +93,47 @@ class DecompTree(AGraph):
                 '''
                 to_sibling.append(n)
                 nmsibling += "_" + n
-                curr_root.remove_node(n)
+                curr_root.remove_node(n)#quitar las aristas si es que existen
+                if self.typ[curr_root.name]==1:                    
+                    for nn in curr_root.nodes(): 
+                        self.delete_edge(n,nn)
                 # make clan with to_sibling nodes plus recursive call on curr_node
                 # connect it with remaining curr_root
                 # clarify whether/how curr_root gets updated
                 #print("Node", node_to_add.nmr, "not added, case 1b not completed yet")
+            self.add_node("PT_"+nmsibling, shape = "point")                
+            if len(to_sibling)==1:
+                s = Sgton(to_sibling[0])
+                self.add_edge("PT_"+nmsibling,to_sibling[0])#No sé cómo quitar el nodo de enmedio, traté haciéndolo Sgton y usando .nms pero no
             
-            sibling_clan = self.subgraph(to_sibling, name = nmsibling)
-            self.typ[nmsibling] = self.typ[curr_root.name]
-                     
-            self.add_node("PT_"+nmsibling)#conectarlo al sibling_clan   
+            else:
+                sibling_clan = self.subgraph(to_sibling, name = nmsibling)
+                self.typ[nmsibling] = self.typ[curr_root.name]                
+                #self.add_node("PT_"+nmsibling, shape = "point") 
+                for nn in sibling_clan.iternodes():
+                    break          
+                self.add_edge("PT_"+nmsibling, nn,)
+            
             nmmedium = nmsibling+ "_"+node_to_add.nmr    
             medium_clan = self.subgraph([node_to_add.nmr,"PT_"+nmsibling], name = nmmedium)  
             medium_clan.graph_attr["rank"] = "same"
-           
+            
+                
             if self.typ[curr_root.name] == 0:
-				medium_clan.add_edge("PT_"+nmsibling , node_to_add.nmr)
-				self.typ[nmmedium] = 1
-			else:
-				self.typ[nmmedium] = 0
-            curr_root.add_node("PT_"+nmmedium)
+                self.add_edge("PT_"+nmsibling , node_to_add.nmr)
+                self.typ[nmmedium] = 1
+            else:
+                self.typ[nmmedium] = 0
+            curr_root.add_node("PT_"+nmmedium, shape = "point")
             if self.typ[curr_root.name] == 1:
-				for n in curr_root.nodes():
-					if n != "PT_"+nmmedium:
-						curr_root.add_edge("PT_"+nmmedium,n)
-				
+                for n in curr_root.nodes():
+                    if n != "PT_"+nmmedium:
+                        self.add_edge("PT_"+nmmedium,n)
+            #self.add_edge("PT_"+nmmedium, "PT_"+nmsibling)
+            for nn in medium_clan.iternodes():
+                break            
+            self.add_edge("PT_"+nmmedium, nn) # arrowhead = "none"
+                
         elif not vd[self.typ[curr_root.name]]:
             'case 1c'
             # aux_clan = curr_root
@@ -126,10 +142,10 @@ class DecompTree(AGraph):
             new_clan = self.subgraph(["PT_"+curr_root.name,node_to_add.nmr], name = nmnew)
             
             if self.typ[curr_root.name] == 0:
-				new_clan.add_edge("PT_"+curr_root.name,node_to_add.nmr)
-				self.typ[nmnew] = 1  
-			else:
-				self.typ[nmnew] = 0         
+                new_clan.add_edge("PT_"+curr_root.name,node_to_add.nmr)
+                self.typ[nmnew] = 1  
+            else:
+                self.typ[nmnew] = 0         
             curr_root = new_clan
           
         else:
@@ -213,12 +229,14 @@ if __name__ == "__main__":
         # ~ dtree.draw("dt.png")
 
 # Titanic nodes in order of edge weight, computed separately:
-    ittit = ['PTAgeadult', 'PTSexmale', 'PTSurvivedno', 'PTClasscrew', 'PTSurvivedyes', 'PTClassrd', 'PTSexfemale', 'PTClassst', 'PTClassnd', 'PTAgechild']    
+    #ittit = ['PTAgeadult', 'PTSexmale', 'PTSurvivedno', 'PTClasscrew', 'PTSurvivedyes', 'PTClassrd', 'PTSexfemale', 'PTClassst', 'PTClassnd', 'PTAgechild']    
+    ittit = ['Age_Adult', 'Sex_Male', 'Survived_No', 'Class_Crew', 'Survived_Yes', 'Class_3rd', 'Sex_Female', 'Class_1st', 'Class_2nd', 'Age_Child']
+
 # Next goal not yet available: getting all the Titanic nodes in this order into the decomposition:
     dtree.start_dec(gr, Sgton(ittit[0]), Sgton(ittit[1])) 
     # ~ for it in ittit[2:]:
         # ~ dtree.add2tree(gr, dtree.root, Sgton(it))
-    for it in ittit[2:3]:
+    for it in ittit[2:5]:
         # one more node
         dtree.add2tree(gr, dtree.root, Sgton(it))
     dtree.layout("dot")
