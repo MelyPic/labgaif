@@ -132,7 +132,7 @@ class DecompTree(AGraph):
             #self.add_edge("PT_"+nmmedium, "PT_"+nmsibling)
             for nn in medium_clan.iternodes():
                 break            
-            self.add_edge("PT_"+nmmedium, nn) # arrowhead = "none"
+            self.add_edge("PT_"+nmmedium, nn) #arrowhead = "none"
                 
         elif not vd[self.typ[curr_root.name]]:
             'case 1c'
